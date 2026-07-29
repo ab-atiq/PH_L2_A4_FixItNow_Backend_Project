@@ -1,0 +1,14 @@
+model Review {
+  id           String   @id @default(uuid())
+  customerId   String
+  technicianId String
+  rating       Int
+  comment      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  customer   User @relation("CustomerReviews", fields: [customerId], references: [id], onDelete: Cascade)
+  technician User @relation("TechnicianReviews", fields: [technicianId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
