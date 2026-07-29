@@ -4,4 +4,7 @@ generated/
 .env
 *.log
 
-/src/modules/
+/src/modules/technicianProfile
+/src/modules/service
+/src/modules/review
+
