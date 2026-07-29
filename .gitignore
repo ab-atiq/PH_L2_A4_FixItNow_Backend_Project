@@ -4,6 +4,5 @@ generated/
 .env
 *.log
 
-/src/modules/technicianProfile
 
 
