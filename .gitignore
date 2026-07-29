@@ -11,5 +11,5 @@ generated
 # /src/modules/admin
 /src/middlewares
 /src/lib
-/src/errors
+# /src/errors
 /src/utils
