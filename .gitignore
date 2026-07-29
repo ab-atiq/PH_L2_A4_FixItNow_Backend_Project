@@ -9,7 +9,7 @@ generated
 /src/modules/payment
 # /src/modules/technician
 # /src/modules/admin
-/src/middlewares
+# /src/middlewares
 /src/lib
 # /src/errors
 # /src/utils
