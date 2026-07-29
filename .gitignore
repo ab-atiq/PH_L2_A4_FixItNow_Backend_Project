@@ -6,7 +6,7 @@ generated
 
 # /src/modules/auth
 # /src/modules/booking
-/src/modules/payment
+# /src/modules/payment
 # /src/modules/technician
 # /src/modules/admin
 # /src/middlewares
