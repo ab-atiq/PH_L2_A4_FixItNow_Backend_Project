@@ -1,4 +1,3 @@
-// src/modules/booking/booking.service.ts
 import httpStatus from "http-status";
 import { BookingStatus, Role } from "../../../generated/prisma/enums";
 import AppError from "../../errors/AppError";
@@ -17,17 +16,13 @@ export type TUpdateBookingStatusPayload = {
 const createBooking = async (customerId: string, payload: TCreateBookingPayload) => {
   const { technicianId, serviceId, scheduledDate } = payload;
 
-  const technician = await prisma.user.findUnique({
-    where: { id: technicianId },
-  });
+  const technician = await prisma.user.findUnique({ where: { id: technicianId } });
 
   if (!technician || technician.role !== Role.TECHNICIAN) {
     throw new AppError(httpStatus.NOT_FOUND, "Technician not found");
   }
 
-  const service = await prisma.service.findUnique({
-    where: { id: serviceId },
-  });
+  const service = await prisma.service.findUnique({ where: { id: serviceId } });
 
   if (!service) {
     throw new AppError(httpStatus.NOT_FOUND, "Service not found");
@@ -46,6 +41,29 @@ const createBooking = async (customerId: string, payload: TCreateBookingPayload)
   return booking;
 };
 
+const getMyBookings = async (userId: string, role: Role) => {
+  const where = role === Role.TECHNICIAN ? { technicianId: userId } : { customerId: userId };
+
+  return prisma.booking.findMany({
+    where,
+    include: { service: true, payment: true },
+    orderBy: { createdAt: "desc" },
+  });
+};
+
+const getBookingById = async (bookingId: string) => {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { service: true, payment: true },
+  });
+
+  if (!booking) {
+    throw new AppError(httpStatus.NOT_FOUND, "Booking not found");
+  }
+
+  return booking;
+};
+
 const updateBookingStatus = async (
   bookingId: string,
   technicianId: string,
@@ -53,9 +71,7 @@ const updateBookingStatus = async (
 ) => {
   const { status } = payload;
 
-  const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
-  });
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
 
   if (!booking) {
     throw new AppError(httpStatus.NOT_FOUND, "Booking not found");
@@ -75,15 +91,15 @@ const updateBookingStatus = async (
     );
   }
 
-  const updatedBooking = await prisma.booking.update({
+  return prisma.booking.update({
     where: { id: bookingId },
     data: { status },
   });
-
-  return updatedBooking;
 };
 
 export const bookingService = {
   createBooking,
+  getMyBookings,
+  getBookingById,
   updateBookingStatus,
 };

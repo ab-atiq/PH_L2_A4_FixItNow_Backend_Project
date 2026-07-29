@@ -1,4 +1,3 @@
-// src/seed.ts
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import config from "./config";
@@ -8,27 +7,27 @@ import { Role } from "../generated/prisma/enums";
 async function main() {
   console.log("Seeding database...");
 
-  await prisma.$transaction([
-    prisma.payment.deleteMany(),
-    prisma.review.deleteMany(),
-    prisma.booking.deleteMany(),
-    prisma.service.deleteMany(),
-    prisma.technicianProfile.deleteMany(),
-    prisma.category.deleteMany(),
-    prisma.user.deleteMany(),
-  ]);
+  // await prisma.$transaction(async (tx) => {
+  //   await tx.payment.deleteMany();
+  //   await tx.review.deleteMany();
+  //   await tx.booking.deleteMany();
+  //   await tx.service.deleteMany();
+  //   await tx.technicianProfile.deleteMany();
+  //   await tx.category.deleteMany();
+  //   await tx.user.deleteMany();
+  // });
 
-  console.log("Database cleared.");
+  // console.log("Database cleared.");
 
   const hashedPassword = await bcrypt.hash(
     "adminpassword123",
-    Number(config.bcrypt_salt_rounds) || 10
+    Number(config.bcrypt_salt_rounds) || 10,
   );
 
   const admin = await prisma.user.create({
     data: {
       name: "FixItNow Admin",
-      email: "admin@fixitnow.com",
+      email: "fixitnow_admin@gmail.com",
       password: hashedPassword,
       role: Role.ADMIN,
     },
@@ -38,14 +37,19 @@ async function main() {
 
   const categories = await prisma.category.createMany({
     data: [
-      { name: "Plumbing", description: "Pipe repairs, leak fixes, and installations" },
-      { name: "Electrical", description: "Wiring, fixtures, and electrical repairs" },
+      {
+        name: "Plumbing",
+        description: "Pipe repairs, leak fixes, and installations",
+      },
+      {
+        name: "Electrical",
+        description: "Wiring, fixtures, and electrical repairs",
+      },
       { name: "Cleaning", description: "Home and office cleaning services" },
     ],
   });
 
   console.log(`${categories.count} categories created.`);
-
   console.log("Seeding completed successfully.");
 }
 

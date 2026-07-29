@@ -1,5 +1,4 @@
-// src/utils/jwtHelper.ts
-import jwt, { JwtPayload, Secret, SignOptions } from "jsonwebtoken";
+import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import { Role } from "../../generated/prisma/enums";
 
 export type TJwtPayload = {

@@ -1,13 +1,12 @@
-// src/controllers/auth.controller.ts
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
 import httpStatus from "http-status";
-import config from "../config";
-import AppError from "../errors/AppError";
-import { prisma } from "../lib/prisma";
-import { catchAsync } from "../utils/catchAsync";
-import { jwtHelper } from "../utils/jwtHelper";
-import { sendResponse } from "../utils/sendResponse";
+import config from "../../config";
+import AppError from "../../errors/AppError";
+import { prisma } from "../../lib/prisma";
+import { catchAsync } from "../../utils/catchAsync";
+import { jwtHelper } from "../../utils/jwtHelper";
+import { sendResponse } from "../../utils/sendResponse";
 
 const register = catchAsync(async (req: Request, res: Response) => {
   const { name, email, password, role } = req.body;
@@ -20,16 +19,11 @@ const register = catchAsync(async (req: Request, res: Response) => {
 
   const hashedPassword = await bcrypt.hash(
     password,
-    Number(config.bcrypt_salt_rounds)
+    Number(config.bcrypt_salt_rounds) || 10,
   );
 
   const user = await prisma.user.create({
-    data: {
-      name,
-      email,
-      password: hashedPassword,
-      role,
-    },
+    data: { name, email, password: hashedPassword, role },
   });
 
   const { password: _password, ...userWithoutPassword } = user;
@@ -67,7 +61,7 @@ const login = catchAsync(async (req: Request, res: Response) => {
   const token = jwtHelper.generateToken(
     jwtPayload,
     config.jwt_access_secret,
-    config.jwt_access_expires_in
+    config.jwt_access_expires_in,
   );
 
   const { password: _password, ...userWithoutPassword } = user;
@@ -76,14 +70,27 @@ const login = catchAsync(async (req: Request, res: Response) => {
     success: true,
     statusCode: httpStatus.OK,
     message: "Logged in successfully",
-    data: {
-      token,
-      user: userWithoutPassword,
-    },
+    data: { token, user: userWithoutPassword },
+  });
+});
+
+const getMe = catchAsync(async (req: Request, res: Response) => {
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: req.user!.id },
+  });
+
+  const { password: _password, ...userWithoutPassword } = user;
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Current user retrieved successfully",
+    data: userWithoutPassword,
   });
 });
 
 export const AuthController = {
   register,
   login,
+  getMe,
 };

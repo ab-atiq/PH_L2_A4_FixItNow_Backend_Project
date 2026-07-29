@@ -1,6 +1,4 @@
-// src/modules/payment/payment.service.ts
 import httpStatus from "http-status";
-import Stripe from "stripe";
 import { BookingStatus, PaymentProvider, PaymentStatus } from "../../../generated/prisma/enums";
 import AppError from "../../errors/AppError";
 import { prisma } from "../../lib/prisma";
@@ -23,15 +21,10 @@ const createPaymentIntent = async (bookingId: string) => {
     );
   }
 
-  const existingPayment = await prisma.payment.findUnique({
-    where: { bookingId },
-  });
+  const existingPayment = await prisma.payment.findUnique({ where: { bookingId } });
 
   if (existingPayment) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      "A payment already exists for this booking"
-    );
+    throw new AppError(httpStatus.BAD_REQUEST, "A payment already exists for this booking");
   }
 
   const amount = booking.service.basePrice;
@@ -53,16 +46,11 @@ const createPaymentIntent = async (bookingId: string) => {
     },
   });
 
-  return {
-    clientSecret: paymentIntent.client_secret,
-    payment,
-  };
+  return { clientSecret: paymentIntent.client_secret, payment };
 };
 
 const confirmPayment = async (transactionId: string) => {
-  const payment = await prisma.payment.findUnique({
-    where: { transactionId },
-  });
+  const payment = await prisma.payment.findUnique({ where: { transactionId } });
 
   if (!payment) {
     throw new AppError(httpStatus.NOT_FOUND, "Payment not found");
@@ -72,13 +60,10 @@ const confirmPayment = async (transactionId: string) => {
     return payment;
   }
 
-  const result = await prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx) => {
     const updatedPayment = await tx.payment.update({
       where: { transactionId },
-      data: {
-        status: PaymentStatus.COMPLETED,
-        paidAt: new Date(),
-      },
+      data: { status: PaymentStatus.COMPLETED, paidAt: new Date() },
     });
 
     await tx.booking.update({
@@ -88,21 +73,26 @@ const confirmPayment = async (transactionId: string) => {
 
     return updatedPayment;
   });
-
-  return result;
 };
 
 const markPaymentFailed = async (transactionId: string) => {
-  const payment = await prisma.payment.update({
+  return prisma.payment.update({
     where: { transactionId },
     data: { status: PaymentStatus.FAILED },
   });
+};
 
-  return payment;
+const getMyPayments = async (customerId: string) => {
+  return prisma.payment.findMany({
+    where: { booking: { customerId } },
+    include: { booking: true },
+    orderBy: { paidAt: "desc" },
+  });
 };
 
 export const paymentService = {
   createPaymentIntent,
   confirmPayment,
   markPaymentFailed,
+  getMyPayments,
 };

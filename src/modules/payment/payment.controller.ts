@@ -1,4 +1,3 @@
-// src/modules/payment/payment.controller.ts
 import { Request, Response } from "express";
 import httpStatus from "http-status";
 import Stripe from "stripe";
@@ -11,7 +10,6 @@ import { paymentService } from "./payment.service";
 
 const createPaymentIntent = catchAsync(async (req: Request, res: Response) => {
   const { bookingId } = req.body;
-
   const result = await paymentService.createPaymentIntent(bookingId);
 
   sendResponse(res, {
@@ -22,10 +20,8 @@ const createPaymentIntent = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// Standard confirm endpoint (client calls after Stripe confirms on the frontend)
 const confirmPayment = catchAsync(async (req: Request, res: Response) => {
   const { transactionId } = req.body;
-
   const payment = await paymentService.confirmPayment(transactionId);
 
   sendResponse(res, {
@@ -36,7 +32,17 @@ const confirmPayment = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// Stripe webhook endpoint — requires express.raw() body parser on this route
+const getMyPayments = catchAsync(async (req: Request, res: Response) => {
+  const payments = await paymentService.getMyPayments(req.user!.id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Payment history retrieved successfully",
+    data: payments,
+  });
+});
+
 const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
   const signature = req.headers["stripe-signature"] as string;
 
@@ -76,5 +82,6 @@ const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
 export const paymentController = {
   createPaymentIntent,
   confirmPayment,
+  getMyPayments,
   handleStripeWebhook,
 };
