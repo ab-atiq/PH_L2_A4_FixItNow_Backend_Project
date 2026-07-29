@@ -8,7 +8,7 @@ generated
 /src/modules/booking
 /src/modules/payment
 # /src/modules/technician
-/src/modules/admin
+# /src/modules/admin
 /src/middlewares
 /src/lib
 /src/errors
