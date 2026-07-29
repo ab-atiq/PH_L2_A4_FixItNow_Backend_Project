@@ -10,6 +10,6 @@ generated
 # /src/modules/technician
 # /src/modules/admin
 # /src/middlewares
-/src/lib
+# /src/lib
 # /src/errors
 # /src/utils
