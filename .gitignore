@@ -5,6 +5,5 @@ generated/
 *.log
 
 /src/modules/technicianProfile
-/src/modules/service
 
 
