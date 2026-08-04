@@ -52,12 +52,12 @@ const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
     event = stripe.webhooks.constructEvent(
       req.body,
       signature,
-      config.stripe_webhook_secret
+      config.stripe_webhook_secret,
     );
   } catch (error) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      `Webhook signature verification failed: ${(error as Error).message}`
+      `Webhook signature verification failed: ${(error as Error).message}`,
     );
   }
 

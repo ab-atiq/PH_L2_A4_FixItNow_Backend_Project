@@ -10,7 +10,7 @@ export type TUpdateBookingStatusBody = {
   status: "ACCEPTED" | "DECLINED";
 };
 
-const validateCreateBooking = (body: TCreateBookingBody): string[] | null => {
+const createBookingValidation = (body: TCreateBookingBody): string[] | null => {
   const errors: string[] = [];
 
   if (!isValidUUID(body?.technicianId)) {
@@ -26,7 +26,9 @@ const validateCreateBooking = (body: TCreateBookingBody): string[] | null => {
   return errors.length ? errors : null;
 };
 
-const validateUpdateBookingStatus = (body: TUpdateBookingStatusBody): string[] | null => {
+const updateBookingStatusValidation = (
+  body: TUpdateBookingStatusBody,
+): string[] | null => {
   const errors: string[] = [];
 
   if (!isOneOf(body?.status, ["ACCEPTED", "DECLINED"] as const)) {
@@ -37,6 +39,6 @@ const validateUpdateBookingStatus = (body: TUpdateBookingStatusBody): string[] |
 };
 
 export const BookingValidation = {
-  validateCreateBooking,
-  validateUpdateBookingStatus,
+  createBookingValidation,
+  updateBookingStatusValidation,
 };

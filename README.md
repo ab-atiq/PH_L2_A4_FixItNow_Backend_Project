@@ -51,7 +51,7 @@ npm run stripe:webhook
 
 ## Testing the full flow (Postman/Thunder Client)
 
-1. `POST /api/auth/register` → create a `TECHNICIAN` and a `CUSTOMER`
+1. `POST /api/auth/register` → create a `TECHNICIAN`, `CUSTOMER` or `ADMIN` user
 2. `POST /api/auth/login` → get JWT for each
 3. As technician: `POST` a `TechnicianProfile` isn't exposed yet — see **Known gaps** below; you can create one directly via `prisma studio` (`npm run prisma:studio`) for quick testing, or add the endpoint.
 4. `POST /api/services` (as technician, needs a TechnicianProfile) → creates a service under a category

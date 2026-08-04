@@ -17,7 +17,10 @@ const createBooking = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getMyBookings = catchAsync(async (req: Request, res: Response) => {
-  const bookings = await bookingService.getMyBookings(req.user!.id, req.user!.role);
+  const bookings = await bookingService.getMyBookings(
+    req.user!.id,
+    req.user!.role,
+  );
 
   sendResponse(res, {
     success: true,
@@ -28,7 +31,7 @@ const getMyBookings = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getBookingById = catchAsync(async (req: Request, res: Response) => {
-  const booking = await bookingService.getBookingById(req.params.id);
+  const booking = await bookingService.getBookingById(req.params.id as string);
 
   sendResponse(res, {
     success: true,
@@ -43,9 +46,9 @@ const updateBookingStatus = catchAsync(async (req: Request, res: Response) => {
   const { id: bookingId } = req.params;
 
   const booking = await bookingService.updateBookingStatus(
-    bookingId,
+    bookingId as string,
     technicianId,
-    req.body
+    req.body,
   );
 
   sendResponse(res, {

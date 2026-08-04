@@ -11,7 +11,7 @@ router.get("/", ServiceController.getServices);
 router.post(
   "/",
   auth(Role.TECHNICIAN),
-  validateRequest(ServiceValidation.createServiceValidation),
+  validateRequest(ServiceValidation.validateCreateService),
   ServiceController.createService,
 );
 
