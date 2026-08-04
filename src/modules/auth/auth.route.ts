@@ -8,14 +8,14 @@ const router = Router();
 
 router.post(
   "/register",
-  validateRequest(AuthValidation.registerValidation),
-  AuthController.register
+  validateRequest(AuthValidation.validateRegister),
+  AuthController.register,
 );
 
 router.post(
   "/login",
-  validateRequest(AuthValidation.loginValidation),
-  AuthController.login
+  validateRequest(AuthValidation.validateLogin),
+  AuthController.login,
 );
 
 router.get("/me", auth(), AuthController.getMe);

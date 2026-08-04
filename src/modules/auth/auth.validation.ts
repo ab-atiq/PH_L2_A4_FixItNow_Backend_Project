@@ -1,4 +1,8 @@
-import { isNonEmptyString, isOneOf, isValidEmail } from "../../utils/validators";
+import {
+  isNonEmptyString,
+  isOneOf,
+  isValidEmail,
+} from "../../utils/validators";
 
 export type TRegisterBody = {
   name: string;
@@ -24,7 +28,10 @@ const validateRegister = (body: TRegisterBody): string[] | null => {
   if (!isNonEmptyString(body?.password, 6)) {
     errors.push("password is required and must be at least 6 characters");
   }
-  if (body?.role !== undefined && !isOneOf(body.role, ["CUSTOMER", "TECHNICIAN", "ADMIN"] as const)) {
+  if (
+    body?.role !== undefined &&
+    !isOneOf(body.role, ["CUSTOMER", "TECHNICIAN", "ADMIN"] as const)
+  ) {
     errors.push("role must be one of CUSTOMER, TECHNICIAN, ADMIN");
   }
 
