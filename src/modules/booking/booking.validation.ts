@@ -1,20 +1,42 @@
-import { z } from "zod";
+import { isOneOf, isValidDate, isValidUUID } from "../../utils/validators";
 
-const createBookingValidation = z.object({
-  body: z.object({
-    technicianId: z.string({ required_error: "technicianId is required" }).uuid(),
-    serviceId: z.string({ required_error: "serviceId is required" }).uuid(),
-    scheduledDate: z.coerce.date({ required_error: "scheduledDate is required" }),
-  }),
-});
+export type TCreateBookingBody = {
+  technicianId: string;
+  serviceId: string;
+  scheduledDate: string;
+};
 
-const updateBookingStatusValidation = z.object({
-  body: z.object({
-    status: z.enum(["ACCEPTED", "DECLINED"]),
-  }),
-});
+export type TUpdateBookingStatusBody = {
+  status: "ACCEPTED" | "DECLINED";
+};
+
+const validateCreateBooking = (body: TCreateBookingBody): string[] | null => {
+  const errors: string[] = [];
+
+  if (!isValidUUID(body?.technicianId)) {
+    errors.push("technicianId is required and must be a valid UUID");
+  }
+  if (!isValidUUID(body?.serviceId)) {
+    errors.push("serviceId is required and must be a valid UUID");
+  }
+  if (!isValidDate(body?.scheduledDate)) {
+    errors.push("scheduledDate is required and must be a valid date");
+  }
+
+  return errors.length ? errors : null;
+};
+
+const validateUpdateBookingStatus = (body: TUpdateBookingStatusBody): string[] | null => {
+  const errors: string[] = [];
+
+  if (!isOneOf(body?.status, ["ACCEPTED", "DECLINED"] as const)) {
+    errors.push("status must be either ACCEPTED or DECLINED");
+  }
+
+  return errors.length ? errors : null;
+};
 
 export const BookingValidation = {
-  createBookingValidation,
-  updateBookingStatusValidation,
+  validateCreateBooking,
+  validateUpdateBookingStatus,
 };

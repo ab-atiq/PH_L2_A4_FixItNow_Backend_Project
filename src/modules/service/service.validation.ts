@@ -1,16 +1,31 @@
-import { z } from "zod";
+import { isNonEmptyString, isPositiveNumber, isValidUUID } from "../../utils/validators";
 
-const createServiceValidation = z.object({
-  body: z.object({
-    name: z.string({ required_error: "Service name is required" }).min(2),
-    description: z.string().optional(),
-    categoryId: z.string({ required_error: "Category ID is required" }).min(1),
-    basePrice: z
-      .number({ required_error: "Base price is required" })
-      .nonnegative(),
-  }),
-});
+export type TCreateServiceBody = {
+  name: string;
+  description?: string;
+  categoryId: string;
+  basePrice: number;
+};
+
+const validateCreateService = (body: TCreateServiceBody): string[] | null => {
+  const errors: string[] = [];
+
+  if (!isNonEmptyString(body?.name, 2)) {
+    errors.push("name is required and must be at least 2 characters");
+  }
+  if (body?.description !== undefined && typeof body.description !== "string") {
+    errors.push("description must be a string");
+  }
+  if (!isValidUUID(body?.categoryId)) {
+    errors.push("categoryId is required and must be a valid UUID");
+  }
+  if (!isPositiveNumber(body?.basePrice)) {
+    errors.push("basePrice is required and must be a positive number");
+  }
+
+  return errors.length ? errors : null;
+};
 
 export const ServiceValidation = {
-  createServiceValidation,
+  validateCreateService,
 };

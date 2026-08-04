@@ -32,7 +32,7 @@ npm run seed
 ```
 
 Creates:
-- Admin → `admin@fixitnow.com` / `adminpassword123`
+- Admin → `fixitnow_admin@gmail.com` / `adminpassword123`
 - Categories → Plumbing, Electrical, Cleaning
 
 ## 5. Run the dev server
