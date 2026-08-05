@@ -8,8 +8,14 @@ const router = Router();
 // NOTE: mount this router's /webhook path with express.raw() in app.ts BEFORE express.json()
 router.post("/webhook", paymentController.handleStripeWebhook);
 
-router.post("/create", auth(Role.CUSTOMER), paymentController.createPaymentIntent);
+router.post(
+  "/create",
+  auth(Role.CUSTOMER),
+  paymentController.createPaymentIntent,
+);
 router.post("/confirm", auth(Role.CUSTOMER), paymentController.confirmPayment);
+router.post("/fail", auth(Role.CUSTOMER), paymentController.failPayment);
 router.get("/", auth(Role.CUSTOMER), paymentController.getMyPayments);
+router.get("/:id", auth(Role.CUSTOMER), paymentController.getPaymentById);
 
 export const paymentRoutes = router;

@@ -1,5 +1,9 @@
 import httpStatus from "http-status";
-import { BookingStatus, PaymentProvider, PaymentStatus } from "../../../generated/prisma/enums";
+import {
+  BookingStatus,
+  PaymentProvider,
+  PaymentStatus,
+} from "../../../generated/prisma/enums";
 import AppError from "../../errors/AppError";
 import { prisma } from "../../lib/prisma";
 import { stripe } from "../../lib/stripe";
@@ -17,24 +21,31 @@ const createPaymentIntent = async (bookingId: string) => {
   if (booking.status !== BookingStatus.ACCEPTED) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      "Payment can only be initiated for an accepted booking"
+      "Payment can only be initiated for an accepted booking",
     );
   }
 
-  const existingPayment = await prisma.payment.findUnique({ where: { bookingId } });
+  // now check if a payment already exists for this booking
+  const existingPayment = await prisma.payment.findUnique({
+    where: { bookingId },
+  });
 
   if (existingPayment) {
-    throw new AppError(httpStatus.BAD_REQUEST, "A payment already exists for this booking");
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "A payment already exists for this booking. No need to create a new payment intent. Please proceed with the existing payment.",
+    );
   }
 
+  // create a new payment intent with Stripe
   const amount = booking.service.basePrice;
-
   const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(amount * 100),
+    amount: amount * 100, // convert to cents
     currency: "usd",
     metadata: { bookingId },
   });
 
+  // create a new payment record in the database with status PENDING
   const payment = await prisma.payment.create({
     data: {
       transactionId: paymentIntent.id,
@@ -56,6 +67,7 @@ const confirmPayment = async (transactionId: string) => {
     throw new AppError(httpStatus.NOT_FOUND, "Payment not found");
   }
 
+  // If the payment is already completed, return payment info without making any changes
   if (payment.status === PaymentStatus.COMPLETED) {
     return payment;
   }
@@ -90,9 +102,30 @@ const getMyPayments = async (customerId: string) => {
   });
 };
 
+const getPaymentById = async (paymentId: string, customerId: string) => {
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId },
+    include: { booking: true },
+  });
+
+  if (!payment) {
+    throw new AppError(httpStatus.NOT_FOUND, "Payment not found");
+  }
+
+  if (payment.booking.customerId !== customerId) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You are not authorized to view this payment",
+    );
+  }
+
+  return payment;
+};
+
 export const paymentService = {
   createPaymentIntent,
   confirmPayment,
   markPaymentFailed,
   getMyPayments,
+  getPaymentById,
 };

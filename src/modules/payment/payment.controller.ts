@@ -43,6 +43,35 @@ const getMyPayments = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getPaymentById = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  if (!id || Array.isArray(id)) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Invalid payment id");
+  }
+
+  const payment = await paymentService.getPaymentById(id, req.user!.id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Payment details retrieved successfully",
+    data: payment,
+  });
+});
+
+const failPayment = catchAsync(async (req: Request, res: Response) => {
+  const { transactionId } = req.body;
+  const payment = await paymentService.markPaymentFailed(transactionId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Payment marked as failed successfully",
+    data: payment,
+  });
+});
+
 const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
   const signature = req.headers["stripe-signature"] as string;
 
@@ -82,6 +111,8 @@ const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
 export const paymentController = {
   createPaymentIntent,
   confirmPayment,
+  failPayment,
   getMyPayments,
+  getPaymentById,
   handleStripeWebhook,
 };
