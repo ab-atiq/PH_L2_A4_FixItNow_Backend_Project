@@ -6,8 +6,8 @@ import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 
 const createService = catchAsync(async (req: Request, res: Response) => {
-  console.log("Request body:", req.body);
-  console.log("Request user:", req.user);
+  // console.log("Request body:", req.body);
+  // console.log("Request user:", req.user);
   const technicianProfile = await prisma.technicianProfile.findUnique({
     where: { userId: req.user!.id },
   });
@@ -16,6 +16,21 @@ const createService = catchAsync(async (req: Request, res: Response) => {
     throw new AppError(
       httpStatus.NOT_FOUND,
       "Create a technician profile before adding a service",
+    );
+  }
+
+  // same service name check for the same technician
+  const existingService = await prisma.service.findFirst({
+    where: {
+      name: req.body.name,
+      technicianId: technicianProfile.id,
+    },
+  });
+
+  if (existingService) {
+    throw new AppError(
+      httpStatus.CONFLICT,
+      "A service with the same name already exists for this technician",
     );
   }
 

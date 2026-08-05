@@ -7,6 +7,7 @@ import { prisma } from "../../lib/prisma";
 import { catchAsync } from "../../utils/catchAsync";
 import { jwtHelper } from "../../utils/jwtHelper";
 import { sendResponse } from "../../utils/sendResponse";
+import { SignOptions } from "jsonwebtoken";
 
 const register = catchAsync(async (req: Request, res: Response) => {
   const { name, email, password, role } = req.body;
@@ -61,7 +62,7 @@ const login = catchAsync(async (req: Request, res: Response) => {
   const token = jwtHelper.generateToken(
     jwtPayload,
     config.jwt_access_secret,
-    config.jwt_access_expires_in,
+    config.jwt_access_expires_in as SignOptions["expiresIn"],
   );
 
   const { password: _password, ...userWithoutPassword } = user;

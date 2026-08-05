@@ -11,7 +11,7 @@ export const validateRequest = <T = any>(validator: TValidator<T>) => {
     const errors = validator(req.body as T);
 
     if (errors && errors.length > 0) {
-      return next(new AppError(httpStatus.BAD_REQUEST, "Validation Error", errors));
+      return next(new AppError(httpStatus.BAD_REQUEST, "Validation Error", errors.join(", ")));
     }
 
     next();

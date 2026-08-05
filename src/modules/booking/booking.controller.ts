@@ -17,6 +17,7 @@ const createBooking = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getMyBookings = catchAsync(async (req: Request, res: Response) => {
+  console.log("User:", req.user);
   const bookings = await bookingService.getMyBookings(
     req.user!.id,
     req.user!.role,

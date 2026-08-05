@@ -31,7 +31,7 @@ const updateBookingStatusValidation = (
 ): string[] | null => {
   const errors: string[] = [];
 
-  if (!isOneOf(body?.status, ["ACCEPTED", "DECLINED"] as const)) {
+  if (!isOneOf(body?.status, ["ACCEPTED", "DECLINED", "COMPLETED"] as const)) {
     errors.push("status must be either ACCEPTED or DECLINED");
   }
 
