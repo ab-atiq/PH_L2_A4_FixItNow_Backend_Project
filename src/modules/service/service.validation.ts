@@ -1,7 +1,7 @@
 import { isNonEmptyString, isPositiveNumber, isValidUUID } from "../../utils/validators";
 
 export type TCreateServiceBody = {
-  name: string;
+  serviceName: string;
   description?: string;
   categoryId: string;
   basePrice: number;
@@ -10,8 +10,8 @@ export type TCreateServiceBody = {
 const validateCreateService = (body: TCreateServiceBody): string[] | null => {
   const errors: string[] = [];
 
-  if (!isNonEmptyString(body?.name, 2)) {
-    errors.push("name is required and must be at least 2 characters");
+  if (!isNonEmptyString(body?.serviceName, 2)) {
+    errors.push("Service name is required and must be at least 2 characters");
   }
   if (body?.description !== undefined && typeof body.description !== "string") {
     errors.push("description must be a string");

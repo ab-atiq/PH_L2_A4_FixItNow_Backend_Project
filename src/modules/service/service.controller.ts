@@ -22,7 +22,7 @@ const createService = catchAsync(async (req: Request, res: Response) => {
   // same service name check for the same technician
   const existingService = await prisma.service.findFirst({
     where: {
-      name: req.body.name,
+      serviceName: req.body.serviceName,
       technicianId: technicianProfile.id,
     },
   });
@@ -34,8 +34,23 @@ const createService = catchAsync(async (req: Request, res: Response) => {
     );
   }
 
+  // short version of creating new service data with technicianId
+  // const newServiceData = {
+  //   ...req.body,
+  //   technicianId: technicianProfile.id,
+  // };
+
+  // long version of creating new service data with technicianId
+  const newServiceData = {
+    serviceName: req.body.serviceName,
+    description: req.body.description,
+    categoryId: req.body.categoryId,
+    basePrice: req.body.basePrice,
+    technicianId: technicianProfile.id,
+  };
+
   const service = await prisma.service.create({
-    data: { ...req.body, technicianId: technicianProfile.id },
+    data: newServiceData,
   });
 
   sendResponse(res, {
