@@ -5,6 +5,21 @@ import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 
 const createCategory = catchAsync(async (req: Request, res: Response) => {
+  // same name check can not duplicate category name
+  const existingCategory = await prisma.category.findFirst({
+    where: { name: req.body.name },
+  });
+
+  if (existingCategory) {
+    sendResponse(res, {
+      success: false,
+      statusCode: httpStatus.BAD_REQUEST,
+      message: "Category with this name already exists.",
+      data: {},
+    });
+    return;
+  }
+
   const category = await prisma.category.create({ data: req.body });
 
   sendResponse(res, {
@@ -16,7 +31,9 @@ const createCategory = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getCategories = catchAsync(async (req: Request, res: Response) => {
-  const categories = await prisma.category.findMany({ orderBy: { name: "asc" } });
+  const categories = await prisma.category.findMany({
+    orderBy: { name: "asc" },
+  });
 
   sendResponse(res, {
     success: true,

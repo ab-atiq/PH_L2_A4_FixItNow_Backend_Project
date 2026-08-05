@@ -46,6 +46,39 @@ async function main() {
         description: "Wiring, fixtures, and electrical repairs",
       },
       { name: "Cleaning", description: "Home and office cleaning services" },
+      {
+        name: "Carpentry",
+        description: "Furniture making, repairs, and woodwork",
+      },
+      {
+        name: "Painting",
+        description: "Interior and exterior painting services",
+      },
+      {
+        name: "Appliance Repair",
+        description:
+          "Fixing household appliances like refrigerators, washers, etc.",
+      },
+      {
+        name: "HVAC",
+        description: "Heating, ventilation, and air conditioning services",
+      },
+      {
+        name: "Landscaping",
+        description: "Garden design, lawn care, and outdoor maintenance",
+      },
+      {
+        name: "Pest Control",
+        description: "Extermination and prevention of pests and insects",
+      },
+      {
+        name: "Roofing",
+        description: "Roof repairs, replacements, and maintenance",
+      },
+      {
+        name: "Flooring",
+        description: "Installation and repair of various flooring types",
+      },
     ],
   });
 
