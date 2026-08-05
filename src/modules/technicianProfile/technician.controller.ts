@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import AppError from "../../errors/AppError";
 import { prisma } from "../../lib/prisma";
 import { catchAsync } from "../../utils/catchAsync";
+import { isValidUUID } from "../../utils/validators";
 import { sendResponse } from "../../utils/sendResponse";
 
 const createProfile = catchAsync(async (req: Request, res: Response) => {
@@ -143,7 +144,6 @@ const getTechnicians = catchAsync(async (req: Request, res: Response) => {
     };
   }
 
-
   const minRatingValue =
     typeof rating === "string" ? Number(rating) : undefined;
   if (!Number.isNaN(minRatingValue) && minRatingValue !== undefined) {
@@ -212,8 +212,59 @@ const getTechnicians = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getTechnicianById = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  if (!isValidUUID(id)) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Invalid technician id");
+  }
+
+  const profile = await prisma.technicianProfile.findUnique({
+    where: { id },
+    include: {
+      user: { select: { id: true, name: true, email: true, role: true } },
+      services: {
+        include: {
+          category: true,
+        },
+      },
+    },
+  });
+
+  if (!profile) {
+    throw new AppError(httpStatus.NOT_FOUND, "Technician not found");
+  }
+
+  const reviews = await prisma.review.findMany({
+    where: { technicianId: profile.userId },
+    include: {
+      customer: { select: { id: true, name: true, email: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const ratingAggregate = await prisma.review.aggregate({
+    where: { technicianId: profile.userId },
+    _avg: { rating: true },
+    _count: { rating: true },
+  });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Technician profile retrieved successfully",
+    data: {
+      ...profile,
+      reviews,
+      averageRating: ratingAggregate._avg.rating ?? null,
+      reviewCount: ratingAggregate._count.rating,
+    },
+  });
+});
+
 export const TechnicianProfileController = {
   createProfile,
   getMyProfile,
   getTechnicians,
+  getTechnicianById,
 };

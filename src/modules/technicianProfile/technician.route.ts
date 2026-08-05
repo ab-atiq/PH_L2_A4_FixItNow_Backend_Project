@@ -13,6 +13,7 @@ router.get(
   auth(Role.TECHNICIAN),
   TechnicianProfileController.getMyProfile,
 );
+router.get("/:id", TechnicianProfileController.getTechnicianById);
 router.post(
   "/profile",
   auth(Role.TECHNICIAN),
