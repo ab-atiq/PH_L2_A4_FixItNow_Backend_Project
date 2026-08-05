@@ -7,7 +7,7 @@ export type TCreateBookingBody = {
 };
 
 export type TUpdateBookingStatusBody = {
-  status: "ACCEPTED" | "DECLINED";
+  status: "ACCEPTED" | "DECLINED" | "COMPLETED";
 };
 
 const createBookingValidation = (body: TCreateBookingBody): string[] | null => {
@@ -32,7 +32,7 @@ const updateBookingStatusValidation = (
   const errors: string[] = [];
 
   if (!isOneOf(body?.status, ["ACCEPTED", "DECLINED", "COMPLETED"] as const)) {
-    errors.push("status must be either ACCEPTED or DECLINED");
+    errors.push("status must be either ACCEPTED, DECLINED, or COMPLETED");
   }
 
   return errors.length ? errors : null;

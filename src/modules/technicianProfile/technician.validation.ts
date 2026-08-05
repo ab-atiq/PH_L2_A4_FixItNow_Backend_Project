@@ -6,6 +6,16 @@ type CreateProfilePayload = {
   location?: unknown;
 };
 
+type AvailabilitySlot = {
+  start?: unknown;
+  end?: unknown;
+  note?: unknown;
+};
+
+type UpdateAvailabilityPayload = {
+  availabilitySlots?: unknown;
+};
+
 const createProfileValidation = (payload: CreateProfilePayload) => {
   const errors: string[] = [];
 
@@ -46,6 +56,49 @@ const createProfileValidation = (payload: CreateProfilePayload) => {
   return errors.length > 0 ? errors : null;
 };
 
+const validateAvailabilitySlots = (
+  payload: UpdateAvailabilityPayload,
+): string[] | null => {
+  const errors: string[] = [];
+
+  if (!Array.isArray(payload.availabilitySlots)) {
+    errors.push("availabilitySlots is required and must be an array");
+    return errors;
+  }
+
+  if (payload.availabilitySlots.length === 0) {
+    return null;
+  }
+
+  payload.availabilitySlots.forEach((slot, index) => {
+    const entry = slot as AvailabilitySlot;
+
+    if (typeof entry !== "object" || entry === null) {
+      errors.push(`availabilitySlots[${index}] must be an object`);
+      return;
+    }
+
+    if (typeof entry.start !== "string" || !entry.start.trim()) {
+      errors.push(
+        `availabilitySlots[${index}].start is required and must be a string`,
+      );
+    }
+    if (typeof entry.end !== "string" || !entry.end.trim()) {
+      errors.push(
+        `availabilitySlots[${index}].end is required and must be a string`,
+      );
+    }
+    if (entry.note !== undefined && typeof entry.note !== "string") {
+      errors.push(
+        `availabilitySlots[${index}].note must be a string if provided`,
+      );
+    }
+  });
+
+  return errors.length ? errors : null;
+};
+
 export const TechnicianProfileValidation = {
   createProfileValidation,
+  validateAvailabilitySlots,
 };

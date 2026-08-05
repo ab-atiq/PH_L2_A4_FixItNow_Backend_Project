@@ -13,10 +13,15 @@ export type TUpdateBookingStatusPayload = {
   status: Extract<BookingStatus, "ACCEPTED" | "DECLINED">;
 };
 
-const createBooking = async (customerId: string, payload: TCreateBookingPayload) => {
+const createBooking = async (
+  customerId: string,
+  payload: TCreateBookingPayload,
+) => {
   const { technicianId, serviceId, scheduledDate } = payload;
 
-  const technician = await prisma.user.findUnique({ where: { id: technicianId } });
+  const technician = await prisma.user.findUnique({
+    where: { id: technicianId },
+  });
 
   if (!technician || technician.role !== Role.TECHNICIAN) {
     throw new AppError(httpStatus.NOT_FOUND, "Technician not found");
@@ -42,7 +47,10 @@ const createBooking = async (customerId: string, payload: TCreateBookingPayload)
 };
 
 const getMyBookings = async (userId: string, role: Role) => {
-  const where = role === Role.TECHNICIAN ? { technicianId: userId } : { customerId: userId };
+  const where =
+    role === Role.TECHNICIAN
+      ? { technicianId: userId }
+      : { customerId: userId };
 
   return prisma.booking.findMany({
     where,
@@ -67,7 +75,7 @@ const getBookingById = async (bookingId: string) => {
 const updateBookingStatus = async (
   bookingId: string,
   technicianId: string,
-  payload: TUpdateBookingStatusPayload
+  payload: TUpdateBookingStatusPayload,
 ) => {
   const { status } = payload;
 
@@ -80,15 +88,29 @@ const updateBookingStatus = async (
   if (booking.technicianId !== technicianId) {
     throw new AppError(
       httpStatus.FORBIDDEN,
-      "You are not allowed to update this booking"
+      "You are not allowed to update this booking",
     );
   }
 
-  if (booking.status !== BookingStatus.REQUESTED) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      `Booking has already been ${booking.status.toLowerCase()}`
-    );
+  if (status === BookingStatus.ACCEPTED || status === BookingStatus.DECLINED) {
+    if (booking.status !== BookingStatus.REQUESTED) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        `Booking has already been ${booking.status.toLowerCase()}`,
+      );
+    }
+  }
+
+  if (status === BookingStatus.COMPLETED) {
+    if (
+      booking.status !== BookingStatus.ACCEPTED &&
+      booking.status !== BookingStatus.IN_PROGRESS
+    ) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "Booking can only be completed after it is accepted or in progress",
+      );
+    }
   }
 
   return prisma.booking.update({

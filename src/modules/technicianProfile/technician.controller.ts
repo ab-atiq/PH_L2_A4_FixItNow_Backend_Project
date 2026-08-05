@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import httpStatus from "http-status";
 import { Prisma } from "@prisma/client";
+import { Role } from "../../../generated/prisma/enums";
 import AppError from "../../errors/AppError";
+import { bookingService } from "../booking/booking.service";
 import { prisma } from "../../lib/prisma";
 import { catchAsync } from "../../utils/catchAsync";
 import { isValidUUID } from "../../utils/validators";
@@ -57,6 +59,44 @@ const getMyProfile = catchAsync(async (req: Request, res: Response) => {
     statusCode: httpStatus.OK,
     message: "Technician profile retrieved successfully",
     data: profile,
+  });
+});
+
+const getBookings = catchAsync(async (req: Request, res: Response) => {
+  const bookings = await bookingService.getMyBookings(
+    req.user!.id,
+    Role.TECHNICIAN,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Technician bookings retrieved successfully",
+    data: bookings,
+  });
+});
+
+const updateAvailability = catchAsync(async (req: Request, res: Response) => {
+  const profile = await prisma.technicianProfile.findUnique({
+    where: { userId: req.user!.id },
+  });
+
+  if (!profile) {
+    throw new AppError(httpStatus.NOT_FOUND, "Technician profile not found");
+  }
+
+  const availabilitySlots = req.body.availabilitySlots;
+
+  const updatedProfile = await prisma.technicianProfile.update({
+    where: { id: profile.id },
+    data: { availabilitySlots },
+  });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Availability slots updated successfully",
+    data: updatedProfile,
   });
 });
 
@@ -267,4 +307,6 @@ export const TechnicianProfileController = {
   getMyProfile,
   getTechnicians,
   getTechnicianById,
+  updateAvailability,
+  getBookings,
 };
