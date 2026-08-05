@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import httpStatus from "http-status";
 import config from "../../config";
 import AppError from "../../errors/AppError";
@@ -8,6 +8,7 @@ import { catchAsync } from "../../utils/catchAsync";
 import { jwtHelper } from "../../utils/jwtHelper";
 import { sendResponse } from "../../utils/sendResponse";
 import { SignOptions } from "jsonwebtoken";
+import { authService } from "./auth.service";
 
 const register = catchAsync(async (req: Request, res: Response) => {
   const { name, email, password, role } = req.body;
@@ -38,42 +39,55 @@ const register = catchAsync(async (req: Request, res: Response) => {
 });
 
 const login = catchAsync(async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const payload = req.body;
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  const { accessToken, refreshToken } = await authService.loginUser(payload);
 
-  if (!user) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "Invalid email or password");
-  }
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: false,
+    sameSite: "none",
+    maxAge: 1000 * 60 * 60 * 24, // 24 hour or 1 day
+  });
 
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-
-  if (!isPasswordValid) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "Invalid email or password");
-  }
-
-  const jwtPayload = {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-  };
-
-  const token = jwtHelper.generateToken(
-    jwtPayload,
-    config.jwt_access_secret,
-    config.jwt_access_expires_in as SignOptions["expiresIn"],
-  );
-
-  const { password: _password, ...userWithoutPassword } = user;
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: false,
+    sameSite: "none",
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 day
+  });
 
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: "Logged in successfully",
-    data: { token, user: userWithoutPassword },
+    data: { accessToken, refreshToken },
   });
 });
+
+const refreshToken = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const refreshToken = req.cookies.refreshToken;
+
+    const { accessToken } = await authService.refreshToken(refreshToken);
+
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "none",
+      maxAge: 1000 * 60 * 60 * 24, // 24 hour or 1 day
+    });
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Token Refreshed Successfully",
+      data: {
+        accessToken,
+      },
+    });
+  },
+);
 
 const getMe = catchAsync(async (req: Request, res: Response) => {
   const user = await prisma.user.findUniqueOrThrow({
@@ -94,4 +108,5 @@ export const AuthController = {
   register,
   login,
   getMe,
+  refreshToken,
 };

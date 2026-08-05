@@ -1,3 +1,8 @@
+enum ActiveStatus {
+  ACTIVE
+  BLOCKED
+}
+
 enum Role {
   CUSTOMER
   TECHNICIAN
