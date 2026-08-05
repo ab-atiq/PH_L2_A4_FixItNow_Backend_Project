@@ -9,7 +9,7 @@ export const globalErrorHandler = (
   res: Response,
   next: NextFunction,
 ) => {
-  let statusCode = httpStatus.INTERNAL_SERVER_ERROR;
+  let statusCode;
   let message = "Something went wrong!";
   let errorDetails: unknown = err;
 
@@ -39,15 +39,19 @@ export const globalErrorHandler = (
     message = "Error occurred during query execution";
     errorDetails = err.message;
   } else if (err instanceof AppError) {
-    statusCode = err.statusCode;
+    //  err.statusCode number convert into string
+    statusCode = err.statusCode.toString();
     message = err.message;
     errorDetails = err.details ?? err.stack;
   } else if (err instanceof Error) {
+    statusCode = httpStatus.INTERNAL_SERVER_ERROR;
     message = err.message;
     errorDetails = err.stack;
+  } else {
+    statusCode = httpStatus.INTERNAL_SERVER_ERROR;
   }
 
-  res.status(statusCode).json({
+  res.status(Number(statusCode)).json({
     success: false,
     message,
     errorDetails,
