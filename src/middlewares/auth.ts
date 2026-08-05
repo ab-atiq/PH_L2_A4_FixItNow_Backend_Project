@@ -17,15 +17,21 @@ declare global {
 
 export const auth = (...allowedRoles: Role[]) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization;
+    // const authHeader = req.headers.authorization;
 
-    const headerToken = authHeader?.startsWith("Bearer ")
-      ? authHeader.split(" ")[1]
-      : authHeader;
+    // const headerToken = authHeader?.startsWith("Bearer ")
+    //   ? authHeader.split(" ")[1]
+    //   : authHeader;
 
-    const cookieToken = req.cookies?.accessToken as string | undefined;
+    // const cookieToken = req.cookies?.accessToken as string | undefined;
 
-    const token = headerToken || cookieToken;
+    // const token = headerToken || cookieToken;
+
+    const token = req.cookies.accessToken
+      ? req.cookies.accessToken
+      : req.headers.authorization?.startsWith("Bearer ")
+        ? req.headers.authorization?.split(" ")[1]
+        : req.headers.authorization;
 
     if (!token) {
       throw new AppError(
@@ -48,7 +54,7 @@ export const auth = (...allowedRoles: Role[]) => {
     const { id, email, role } = decoded;
 
     const user = await prisma.user.findUnique({
-      where: { id, email },
+      where: { id, email, role },
     });
 
     if (!user) {
@@ -58,6 +64,11 @@ export const auth = (...allowedRoles: Role[]) => {
       );
     }
 
+    if (user.activeStatus === "BLOCKED") {
+      throw new Error("Your account has been blocked. Please contact support.");
+    }
+
+    // role check
     if (allowedRoles.length && !allowedRoles.includes(role)) {
       throw new AppError(
         httpStatus.FORBIDDEN,

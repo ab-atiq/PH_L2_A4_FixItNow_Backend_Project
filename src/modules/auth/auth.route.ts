@@ -3,6 +3,7 @@ import { auth } from "../../middlewares/auth";
 import { validateRequest } from "../../middlewares/validateRequest";
 import { AuthController } from "./auth.controller";
 import { AuthValidation } from "./auth.validation";
+import { Role } from "../../../generated/prisma/client";
 
 const router = Router();
 
@@ -18,7 +19,11 @@ router.post(
   AuthController.login,
 );
 
-router.post("/refresh-token", AuthController.refreshToken);
+router.post(
+  "/refresh-token",
+  auth(Role.TECHNICIAN, Role.CUSTOMER, Role.ADMIN),
+  AuthController.refreshToken,
+);
 
 router.get("/me", auth(), AuthController.getMe);
 
