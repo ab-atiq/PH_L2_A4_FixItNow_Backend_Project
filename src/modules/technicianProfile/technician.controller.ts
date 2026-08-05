@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import httpStatus from "http-status";
+import { Prisma } from "@prisma/client";
 import AppError from "../../errors/AppError";
 import { prisma } from "../../lib/prisma";
 import { catchAsync } from "../../utils/catchAsync";
@@ -58,4 +59,161 @@ const getMyProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-export const TechnicianProfileController = { createProfile, getMyProfile };
+const getTechnicians = catchAsync(async (req: Request, res: Response) => {
+  const {
+    skills,
+    location,
+    minExperience,
+    maxExperience,
+    minRate,
+    maxRate,
+    available,
+    rating,
+    serviceType,
+  } = req.query;
+
+  const technicianWhere: Prisma.TechnicianProfileWhereInput = {};
+
+  if (typeof skills === "string" && skills.trim()) {
+    technicianWhere.skills = {
+      contains: skills.trim(),
+      mode: "insensitive",
+    };
+  }
+
+  if (typeof location === "string" && location.trim()) {
+    technicianWhere.location = {
+      contains: location.trim(),
+      mode: "insensitive",
+    };
+  }
+
+  const minExperienceValue =
+    typeof minExperience === "string" ? Number(minExperience) : undefined;
+  if (!Number.isNaN(minExperienceValue) && minExperienceValue !== undefined) {
+    technicianWhere.experience = {
+      gte: minExperienceValue,
+      ...(technicianWhere.experience as Prisma.IntFilter),
+    };
+  }
+
+  const maxExperienceValue =
+    typeof maxExperience === "string" ? Number(maxExperience) : undefined;
+  if (!Number.isNaN(maxExperienceValue) && maxExperienceValue !== undefined) {
+    technicianWhere.experience = {
+      lte: maxExperienceValue,
+      ...(technicianWhere.experience as Prisma.IntFilter),
+    };
+  }
+
+  const minRateValue =
+    typeof minRate === "string" ? Number(minRate) : undefined;
+  const maxRateValue =
+    typeof maxRate === "string" ? Number(maxRate) : undefined;
+  if (
+    (!Number.isNaN(minRateValue) && minRateValue !== undefined) ||
+    (!Number.isNaN(maxRateValue) && maxRateValue !== undefined)
+  ) {
+    const rateFilter: Prisma.FloatFilter = {} as Prisma.FloatFilter;
+    if (!Number.isNaN(minRateValue) && minRateValue !== undefined) {
+      rateFilter.gte = minRateValue;
+    }
+    if (!Number.isNaN(maxRateValue) && maxRateValue !== undefined) {
+      rateFilter.lte = maxRateValue;
+    }
+    technicianWhere.hourlyRate = rateFilter;
+  }
+
+  if (typeof available === "string" && available.trim()) {
+    if (available === "true" || available === "false") {
+      technicianWhere.isAvailable = available === "true";
+    }
+  }
+
+  if (typeof serviceType === "string" && serviceType.trim()) {
+    technicianWhere.services = {
+      some: {
+        category: {
+          categoryName: {
+            contains: serviceType.trim(),
+            mode: "insensitive",
+          },
+        },
+      },
+    };
+  }
+
+
+  const minRatingValue =
+    typeof rating === "string" ? Number(rating) : undefined;
+  if (!Number.isNaN(minRatingValue) && minRatingValue !== undefined) {
+    const ratingResults = await prisma.review.groupBy({
+      by: ["technicianId"],
+      _avg: { rating: true },
+    });
+
+    const technicianIds = ratingResults
+      .filter(
+        (item) =>
+          item._avg.rating !== null && item._avg.rating >= minRatingValue,
+      )
+      .map((item) => item.technicianId);
+
+    if (technicianIds.length === 0) {
+      return sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Technicians retrieved successfully",
+        data: [],
+      });
+    }
+
+    technicianWhere.user = {
+      id: { in: technicianIds },
+    };
+  }
+
+  const technicians = await prisma.technicianProfile.findMany({
+    where: Object.keys(technicianWhere).length ? technicianWhere : undefined,
+    include: {
+      user: { select: { id: true, name: true, email: true, role: true } },
+      services: {
+        include: { category: true },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const reviewAverages = await prisma.review.groupBy({
+    by: ["technicianId"],
+    _avg: { rating: true },
+  });
+
+  const ratingMap = reviewAverages.reduce<Record<string, number>>(
+    (acc, item) => {
+      if (item._avg.rating !== null) {
+        acc[item.technicianId] = item._avg.rating;
+      }
+      return acc;
+    },
+    {},
+  );
+
+  const techniciansWithRating = technicians.map((technician) => ({
+    ...technician,
+    averageRating: ratingMap[technician.user.id] ?? null,
+  }));
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Technicians retrieved successfully",
+    data: techniciansWithRating,
+  });
+});
+
+export const TechnicianProfileController = {
+  createProfile,
+  getMyProfile,
+  getTechnicians,
+};

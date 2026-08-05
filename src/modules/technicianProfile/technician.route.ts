@@ -7,6 +7,7 @@ import { TechnicianProfileValidation } from "./technician.validation";
 
 const router = Router();
 
+router.get("/", TechnicianProfileController.getTechnicians);
 router.get(
   "/me",
   auth(Role.TECHNICIAN),
