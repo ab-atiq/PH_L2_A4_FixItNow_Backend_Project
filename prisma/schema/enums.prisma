@@ -20,6 +20,7 @@ enum BookingStatus {
 
 enum PaymentProvider {
   STRIPE
+  SSL_COMMERZ
 }
 
 enum PaymentStatus {

@@ -19,7 +19,7 @@ router.get("/", auth(Role.CUSTOMER, Role.TECHNICIAN), bookingController.getMyBoo
 router.get("/:id", auth(), bookingController.getBookingById);
 
 router.patch(
-  "/:id/status",
+  "/:id",
   auth(Role.TECHNICIAN),
   validateRequest(BookingValidation.updateBookingStatusValidation),
   bookingController.updateBookingStatus

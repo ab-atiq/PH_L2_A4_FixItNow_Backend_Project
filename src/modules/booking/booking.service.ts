@@ -88,30 +88,18 @@ const updateBookingStatus = async (
   if (booking.technicianId !== technicianId) {
     throw new AppError(
       httpStatus.FORBIDDEN,
-      "You are not allowed to update this booking",
+      "This booking is not assigned to you. So, You are not allowed to update this booking",
     );
   }
 
-  if (status === BookingStatus.ACCEPTED || status === BookingStatus.DECLINED) {
-    if (booking.status !== BookingStatus.REQUESTED) {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        `Booking has already been ${booking.status.toLowerCase()}`,
-      );
-    }
+  // if (status === BookingStatus.ACCEPTED || status === BookingStatus.DECLINED) {
+  if (booking.status !== BookingStatus.REQUESTED) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      `Booking has already been ${booking.status.toLowerCase()}. Only bookings with status 'REQUESTED' can be accepted or declined`,
+    );
   }
-
-  if (status === BookingStatus.COMPLETED) {
-    if (
-      booking.status !== BookingStatus.ACCEPTED &&
-      booking.status !== BookingStatus.IN_PROGRESS
-    ) {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        "Booking can only be completed after it is accepted or in progress",
-      );
-    }
-  }
+  // }
 
   return prisma.booking.update({
     where: { id: bookingId },
