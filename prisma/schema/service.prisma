@@ -1,6 +1,6 @@
 model Service {
   id           String   @id @default(uuid())
-  name         String   @db.VarChar(255)
+  serviceName  String   @db.VarChar(255)
   description  String?
   categoryId   String
   technicianId String

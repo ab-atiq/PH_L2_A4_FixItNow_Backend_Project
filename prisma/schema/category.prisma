@@ -1,6 +1,6 @@
 model Category {
   id          String   @id @default(uuid())
-  name        String   @db.VarChar(255)
+  categoryName        String   @db.VarChar(255)
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
