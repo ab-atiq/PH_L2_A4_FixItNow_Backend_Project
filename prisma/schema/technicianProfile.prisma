@@ -4,6 +4,7 @@ model TechnicianProfile {
   skills      String
   experience  Int
   hourlyRate  Float
+  location    String?
   isAvailable Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

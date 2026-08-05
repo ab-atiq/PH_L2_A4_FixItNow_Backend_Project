@@ -25,6 +25,7 @@ const createProfile = catchAsync(async (req: Request, res: Response) => {
       skills: req.body.skills,
       experience: req.body.experience,
       hourlyRate: req.body.hourlyRate,
+      location: req.body.location,
       isAvailable: req.body.isAvailable ?? true,
     },
   });
