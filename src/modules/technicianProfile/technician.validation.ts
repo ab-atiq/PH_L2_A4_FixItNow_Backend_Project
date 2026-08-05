@@ -17,11 +17,11 @@ const createProfileValidation = (payload: CreateProfilePayload) => {
     !Number.isInteger(payload.experience) ||
     payload.experience < 0
   ) {
-    errors.push("Experience is required and must be a non-negative integer");
+    errors.push("Experience is required and must be a non-negative integer number");
   }
 
   if (typeof payload.hourlyRate !== "number" || payload.hourlyRate < 0) {
-    errors.push("Hourly rate is required and must be a non-negative number");
+    errors.push("Hourly rate is required and must be a non-negative integer number");
   }
 
   if (

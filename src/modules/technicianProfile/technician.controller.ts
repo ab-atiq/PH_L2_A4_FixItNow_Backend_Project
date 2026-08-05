@@ -6,6 +6,7 @@ import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 
 const createProfile = catchAsync(async (req: Request, res: Response) => {
+  // check if the technician profile already exists for the user
   const existingProfile = await prisma.technicianProfile.findUnique({
     where: { userId: req.user!.id },
   });
@@ -17,6 +18,7 @@ const createProfile = catchAsync(async (req: Request, res: Response) => {
     );
   }
 
+  // create a new technician profile
   const profile = await prisma.technicianProfile.create({
     data: {
       userId: req.user!.id,

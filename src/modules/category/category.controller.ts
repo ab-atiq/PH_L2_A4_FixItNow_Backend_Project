@@ -7,7 +7,7 @@ import { sendResponse } from "../../utils/sendResponse";
 const createCategory = catchAsync(async (req: Request, res: Response) => {
   // same name check can not duplicate category name
   const existingCategory = await prisma.category.findFirst({
-    where: { name: req.body.name },
+    where: { categoryName: req.body.name },
   });
 
   if (existingCategory) {
@@ -20,7 +20,12 @@ const createCategory = catchAsync(async (req: Request, res: Response) => {
     return;
   }
 
-  const category = await prisma.category.create({ data: req.body });
+  const category = await prisma.category.create({
+    data: {
+      categoryName: req.body.name,
+      description: req.body.description,
+    },
+  });
 
   sendResponse(res, {
     success: true,
@@ -32,7 +37,7 @@ const createCategory = catchAsync(async (req: Request, res: Response) => {
 
 const getCategories = catchAsync(async (req: Request, res: Response) => {
   const categories = await prisma.category.findMany({
-    orderBy: { name: "asc" },
+    orderBy: { categoryName: "asc" },
   });
 
   sendResponse(res, {

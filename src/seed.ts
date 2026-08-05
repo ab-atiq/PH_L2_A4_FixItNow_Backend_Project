@@ -38,45 +38,45 @@ async function main() {
   const categories = await prisma.category.createMany({
     data: [
       {
-        name: "Plumbing",
+        categoryName: "Plumbing",
         description: "Pipe repairs, leak fixes, and installations",
       },
       {
-        name: "Electrical",
+        categoryName: "Electrical",
         description: "Wiring, fixtures, and electrical repairs",
       },
-      { name: "Cleaning", description: "Home and office cleaning services" },
+      { categoryName: "Cleaning", description: "Home and office cleaning services" },
       {
-        name: "Carpentry",
+        categoryName: "Carpentry",
         description: "Furniture making, repairs, and woodwork",
       },
       {
-        name: "Painting",
+        categoryName: "Painting",
         description: "Interior and exterior painting services",
       },
       {
-        name: "Appliance Repair",
+        categoryName: "Appliance Repair",
         description:
           "Fixing household appliances like refrigerators, washers, etc.",
       },
       {
-        name: "HVAC",
+        categoryName: "HVAC",
         description: "Heating, ventilation, and air conditioning services",
       },
       {
-        name: "Landscaping",
+        categoryName: "Landscaping",
         description: "Garden design, lawn care, and outdoor maintenance",
       },
       {
-        name: "Pest Control",
+        categoryName: "Pest Control",
         description: "Extermination and prevention of pests and insects",
       },
       {
-        name: "Roofing",
+        categoryName: "Roofing",
         description: "Roof repairs, replacements, and maintenance",
       },
       {
-        name: "Flooring",
+        categoryName: "Flooring",
         description: "Installation and repair of various flooring types",
       },
     ],
