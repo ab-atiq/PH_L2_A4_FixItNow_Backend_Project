@@ -72,6 +72,65 @@ const failPayment = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getCheckoutSession = catchAsync(async (req: Request, res: Response) => {
+  const amount = req.body.amount;
+  const bookingId = req.body.bookingId;
+  const currency = req.body.currency;
+
+  const session = await paymentService.createCheckoutSession(req.user!.id, {
+    amount: amount ? Number(amount) : undefined,
+    bookingId: typeof bookingId === "string" ? bookingId : undefined,
+    currency: typeof currency === "string" ? currency : "usd",
+  });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Checkout session created successfully",
+    data: session,
+  });
+});
+
+const handleCheckoutSuccess = catchAsync(
+  async (req: Request, res: Response) => {
+    const sessionId = Array.isArray(req.query.session_id)
+      ? req.query.session_id[0]
+      : req.query.session_id;
+
+    if (!sessionId) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Missing Stripe session id");
+    }
+
+    const payment = await paymentService.confirmPayment(sessionId as string);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Payment completed successfully",
+      data: payment,
+    });
+  },
+);
+
+const handleCheckoutCancel = catchAsync(async (req: Request, res: Response) => {
+  const sessionId = Array.isArray(req.query.session_id)
+    ? req.query.session_id[0]
+    : req.query.session_id;
+
+  if (!sessionId) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Missing Stripe session id");
+  }
+
+  const payment = await paymentService.markPaymentFailed(sessionId as string);
+
+  sendResponse(res, {
+    success: false,
+    statusCode: httpStatus.OK,
+    message: "Payment was cancelled",
+    data: payment,
+  });
+});
+
 const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
   const signature = req.headers["stripe-signature"] as string;
 
@@ -101,6 +160,17 @@ const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
       await paymentService.markPaymentFailed(paymentIntent.id);
       break;
     }
+    case "checkout.session.completed": {
+      const checkoutSession = event.data.object as Stripe.Checkout.Session;
+      await paymentService.confirmPayment(checkoutSession.id);
+      break;
+    }
+    case "checkout.session.expired":
+    case "checkout.session.async_payment_failed": {
+      const checkoutSession = event.data.object as Stripe.Checkout.Session;
+      await paymentService.markPaymentFailed(checkoutSession.id);
+      break;
+    }
     default:
       break;
   }
@@ -115,4 +185,7 @@ export const paymentController = {
   getMyPayments,
   getPaymentById,
   handleStripeWebhook,
+  getCheckoutSession,
+  handleCheckoutSuccess,
+  handleCheckoutCancel,
 };

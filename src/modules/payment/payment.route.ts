@@ -15,6 +15,13 @@ router.post(
 );
 router.post("/confirm", auth(Role.CUSTOMER), paymentController.confirmPayment);
 router.post("/fail", auth(Role.CUSTOMER), paymentController.failPayment);
+router.get(
+  "/checkout",
+  auth(Role.CUSTOMER),
+  paymentController.getCheckoutSession,
+);
+router.get("/success", paymentController.handleCheckoutSuccess);
+router.get("/cancel", paymentController.handleCheckoutCancel);
 router.get("/", auth(Role.CUSTOMER), paymentController.getMyPayments);
 router.get("/:id", auth(Role.CUSTOMER), paymentController.getPaymentById);
 

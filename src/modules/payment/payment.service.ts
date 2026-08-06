@@ -4,6 +4,7 @@ import {
   PaymentProvider,
   PaymentStatus,
 } from "../../../generated/prisma/enums";
+import config from "../../config";
 import AppError from "../../errors/AppError";
 import { prisma } from "../../lib/prisma";
 import { stripe } from "../../lib/stripe";
@@ -122,10 +123,125 @@ const getPaymentById = async (paymentId: string, customerId: string) => {
   return payment;
 };
 
+type TCreateCheckoutSessionPayload = {
+  amount?: number;
+  bookingId?: string;
+  currency?: string;
+};
+
+const createCheckoutSession = async (
+  userId: string,
+  payload: TCreateCheckoutSessionPayload = {},
+) => {
+  const { amount, bookingId, currency = "usd" } = payload;
+
+  return prisma.$transaction(async (tx) => {
+    const user = await tx.user.findUniqueOrThrow({
+      where: { id: userId },
+    });
+
+    if (!bookingId) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "Booking ID is required to create a Stripe checkout session",
+      );
+    }
+
+    const booking = await tx.booking.findUnique({
+      where: { id: bookingId },
+      include: { service: true },
+    });
+
+    if (!booking) {
+      throw new AppError(httpStatus.NOT_FOUND, "Booking not found");
+    }
+
+    if (booking.customerId !== userId) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        "You are not authorized to pay for this booking",
+      );
+    }
+
+    if (booking.status !== BookingStatus.ACCEPTED) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "Payment can only be initiated for an accepted booking",
+      );
+    }
+
+    const existingPayment = await tx.payment.findUnique({
+      where: { bookingId },
+    });
+
+    if (existingPayment) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        existingPayment.status === PaymentStatus.COMPLETED
+          ? "This booking is already paid."
+          : "A payment already exists for this booking. Please complete or cancel the existing payment first.",
+      );
+    }
+
+    const paymentAmount = amount ?? booking.service.basePrice;
+
+    if (!paymentAmount || paymentAmount <= 0) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "Payment amount must be greater than zero",
+      );
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      payment_method_types: ["card"],
+      customer_email: user.email,
+      line_items: [
+        {
+          price_data: {
+            currency,
+            unit_amount: Math.round(paymentAmount * 100),
+            product_data: {
+              name: `FixItNow booking payment`,
+            },
+          },
+          quantity: 1,
+        },
+      ],
+      // success_url: `${config.app_url}/api/payments/success?session_id={CHECKOUT_SESSION_ID}`,
+      // cancel_url: `${config.app_url}/api/payments/cancel?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `http://localhost:${config.port}/api/payments/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `http://localhost:${config.port}/api/payments/cancel?session_id={CHECKOUT_SESSION_ID}`,
+      metadata: {
+        userId: user.id,
+        bookingId: booking.id,
+        amount: String(paymentAmount),
+      },
+    });
+
+    const payment = await tx.payment.create({
+      data: {
+        transactionId: session.id,
+        bookingId: booking.id,
+        amount: paymentAmount,
+        method: "card",
+        provider: PaymentProvider.STRIPE,
+        status: PaymentStatus.PENDING,
+      },
+    });
+
+    return {
+      paymentUrl: session.url,
+      payment,
+    };
+  });
+};
+
 export const paymentService = {
   createPaymentIntent,
   confirmPayment,
   markPaymentFailed,
   getMyPayments,
   getPaymentById,
+  createCheckoutSession,
 };
