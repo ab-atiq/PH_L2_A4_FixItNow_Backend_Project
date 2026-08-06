@@ -8,7 +8,7 @@
   "main": "server.ts",
   "scripts": {
     "dev": "tsx watch ./src/server.ts",
-    "build": "tsup src/server.ts --platform node --target node24 --format esm --out-dir dist --dts --clean",
+    "build": "prisma generate && tsup src/server.ts --platform node --target node24 --format esm --out-dir dist --dts --clean",
     "start": "node dist/server.js",
     "seed": "tsx src/seed.ts",
     "prisma:generate": "prisma generate",
