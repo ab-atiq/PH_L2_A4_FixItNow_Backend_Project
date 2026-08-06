@@ -210,8 +210,8 @@ const createCheckoutSession = async (
       ],
       // success_url: `${config.app_url}/api/payments/success?session_id={CHECKOUT_SESSION_ID}`,
       // cancel_url: `${config.app_url}/api/payments/cancel?session_id={CHECKOUT_SESSION_ID}`,
-      success_url: `http://localhost:${config.port}/api/payments/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `http://localhost:${config.port}/api/payments/cancel?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${config.app_url}/api/payments/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${config.app_url}/api/payments/cancel?session_id={CHECKOUT_SESSION_ID}`,
       metadata: {
         userId: user.id,
         bookingId: booking.id,
