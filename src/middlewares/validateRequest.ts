@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { type NextFunction, type Request, type Response } from "express";
 import httpStatus from "http-status";
 import AppError from "../errors/AppError";
 
@@ -11,7 +11,13 @@ export const validateRequest = <T = any>(validator: TValidator<T>) => {
     const errors = validator(req.body as T);
 
     if (errors && errors.length > 0) {
-      return next(new AppError(httpStatus.BAD_REQUEST, "Validation Error", errors.join(", ")));
+      return next(
+        new AppError(
+          httpStatus.BAD_REQUEST,
+          "Validation Error",
+          errors.join(", "),
+        ),
+      );
     }
 
     next();

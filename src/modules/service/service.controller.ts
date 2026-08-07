@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { type Request, type Response } from "express";
 import httpStatus from "http-status";
 import { Prisma } from "../../../generated/prisma/client";
 import AppError from "../../errors/AppError";

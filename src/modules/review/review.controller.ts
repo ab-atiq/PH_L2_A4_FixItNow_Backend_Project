@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { type Request, type Response } from "express";
 import httpStatus from "http-status";
 import { BookingStatus } from "../../../generated/prisma/enums";
 import AppError from "../../errors/AppError";
@@ -17,7 +17,10 @@ const createReview = catchAsync(async (req: Request, res: Response) => {
   }
 
   if (booking.status !== BookingStatus.COMPLETED) {
-    throw new AppError(httpStatus.BAD_REQUEST, "You can only review a completed job");
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "You can only review a completed job",
+    );
   }
 
   const review = await prisma.review.create({

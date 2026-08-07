@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { type NextFunction, type Request, type Response } from "express";
 import httpStatus from "http-status";
 import config from "../config";
 import AppError from "../errors/AppError";

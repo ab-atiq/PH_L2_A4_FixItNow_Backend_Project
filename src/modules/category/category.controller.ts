@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { type Request, type Response } from "express";
 import httpStatus from "http-status";
 import { prisma } from "../../lib/prisma";
 import { catchAsync } from "../../utils/catchAsync";

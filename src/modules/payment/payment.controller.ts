@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { type Request, type Response } from "express";
 import httpStatus from "http-status";
 import Stripe from "stripe";
 import config from "../../config";
@@ -77,11 +77,16 @@ const getCheckoutSession = catchAsync(async (req: Request, res: Response) => {
   const bookingId = req.body.bookingId;
   const currency = req.body.currency;
 
-  const session = await paymentService.createCheckoutSession(req.user!.id, {
-    amount: amount ? Number(amount) : undefined,
-    bookingId: typeof bookingId === "string" ? bookingId : undefined,
-    currency: typeof currency === "string" ? currency : "usd",
-  });
+  const payload = {
+    ...(typeof amount !== "undefined" ? { amount: Number(amount) } : {}),
+    ...(typeof bookingId === "string" ? { bookingId } : {}),
+    ...(typeof currency === "string" ? { currency } : {}),
+  };
+
+  const session = await paymentService.createCheckoutSession(
+    req.user!.id,
+    payload,
+  );
 
   sendResponse(res, {
     success: true,
