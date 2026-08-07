@@ -5,6 +5,7 @@ export default defineConfig({
   // format: ["esm", "cjs"], // Keep this as ESM
   format: ["esm"], // Keep this as ESM
   target: "esnext",
+  platform: "node",
   outDir: "dist",
   clean: true,
   bundle: true,
